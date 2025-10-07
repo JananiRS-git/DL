@@ -1,0 +1,48 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input, Dense
+from tensorflow.keras import regularizers
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.model_selection import train_test_split
+np.random.seed(42)
+normal = np.random.normal(0, 1, (1000, 20))   
+fraud = np.random.normal(4, 1, (50, 20))      
+X = np.vstack([normal, fraud])
+y = np.hstack([np.zeros(1000), np.ones(50)])  
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+X_train_normal = X_train[y_train == 0]
+input_dim = X_train_normal.shape[1]
+encoding_dim = 10  
+input_layer = Input(shape=(input_dim,))
+encoded = Dense(14, activation="relu")(input_layer)
+encoded = Dense(encoding_dim, activation="relu")(encoded)
+decoded = Dense(14, activation="relu")(encoded)
+decoded = Dense(input_dim, activation="linear")(decoded)
+autoencoder = Model(input_layer, decoded)
+autoencoder.compile(optimizer="adam", loss="mse")
+history = autoencoder.fit(X_train_normal, X_train_normal,
+                          epochs=20,
+                          batch_size=32,
+                          shuffle=True,
+                          validation_split=0.1,
+                          verbose=0)
+reconstructions = autoencoder.predict(X_test)
+mse = np.mean(np.power(X_test - reconstructions, 2), axis=1)
+threshold = np.mean(mse) + 2*np.std(mse)
+print("Reconstruction error threshold:", threshold)
+y_pred = (mse > threshold).astype(int)
+print("\nConfusion Matrix:")
+print(confusion_matrix(y_test, y_pred))
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+plt.hist(mse[y_test == 0], bins=30, alpha=0.7, label="Normal")
+plt.hist(mse[y_test == 1], bins=30, alpha=0.7, label="Fraud")
+plt.axvline(threshold, color='red', linestyle='--', label="Threshold")
+plt.legend()
+plt.title("Reconstruction Error Distribution")
+plt.show()
