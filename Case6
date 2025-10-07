@@ -1,0 +1,15 @@
+simulated_speech_inputs = [
+    "Hello, how are you?",
+    "Open the browser",
+    "Play some music",
+    "What is the time now?",
+    "Turn on the lights"
+]
+
+print("🎙️ Simulated Speech Recognition Demo\n")
+for idx, speech_text in enumerate(simulated_speech_inputs, start=1):
+    print(f"Input {idx}: (simulated speech) -> {speech_text}")
+    recognized_text = speech_text  
+    print(f"🗒️ Recognized Text: {recognized_text}\n")
+
+print("✅ Demo complete. This simulates speech-to-text conversion for a virtual assistant.")
