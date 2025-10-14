@@ -1,0 +1,37 @@
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense, Embedding
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+import numpy as np
+text = """Once upon a time there was a reader who loved books and stories.
+The reader wished for an app that could auto-complete sentences."""
+tokenizer = Tokenizer()
+tokenizer.fit_on_texts([text])
+total_words = len(tokenizer.word_index) + 1
+input_sequences = []
+for line in text.split('.'):
+    token_list = tokenizer.texts_to_sequences([line])[0]
+    for i in range(1, len(token_list)):
+        n_gram = token_list[:i+1]
+        input_sequences.append(n_gram)
+max_len = max([len(x) for x in input_sequences])
+input_sequences = np.array(pad_sequences(input_sequences, maxlen=max_len, padding='pre'))
+X, y = input_sequences[:, :-1], input_sequences[:, -1]
+y = np.eye(total_words)[y]
+model = Sequential([
+    Embedding(total_words, 10, input_length=max_len-1),
+    LSTM(100),
+    Dense(total_words, activation='softmax')
+])
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+model.fit(X, y, epochs=200, verbose=0)
+seed = "the reader"
+for _ in range(5):
+    token_list = tokenizer.texts_to_sequences([seed])[0]
+    token_list = pad_sequences([token_list], maxlen=max_len-1, padding='pre')
+    predicted = np.argmax(model.predict(token_list, verbose=0))
+    for word, index in tokenizer.word_index.items():
+        if index == predicted:
+            seed += " " + word
+            break
+print("Generated text:\n", seed)
