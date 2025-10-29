@@ -5,26 +5,39 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
-tweets = ["I love the new product!", "The update is terrible!", "Not bad, but could be better."]
-labels = [1, 0, 1] 
+tweets = [
+    "I love the new product!",
+    "The update is terrible!",
+    "Not bad, but could be better.",
+    "Absolutely fantastic experience!",
+    "Worst product ever."
+]
+labels = [1, 0, 1, 1, 0]  # 1 = Positive, 0 = Negative
 tokenizer = Tokenizer()
 tokenizer.fit_on_texts(tweets)
 seqs = tokenizer.texts_to_sequences(tweets)
-padded = pad_sequences(seqs, maxlen=5)
+padded = pad_sequences(seqs, maxlen=6)
 model = Sequential([
-    Embedding(input_dim=50, output_dim=8, input_length=5),
+    Embedding(input_dim=100, output_dim=8, input_length=6),
     LSTM(10),
     Dense(1, activation='sigmoid')
 ])
 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 model.fit(padded, np.array(labels), epochs=10, verbose=0)
 preds = (model.predict(padded) > 0.5).astype("int32")
+print("\n📊 SENTIMENT ANALYSIS RESULTS\n------------------------------")
+for i, tweet in enumerate(tweets):
+    sentiment = "Positive 😊" if preds[i] == 1 else "Negative 😞"
+    print(f"{i+1}. {tweet}\n   → Predicted Sentiment: {sentiment}\n")
 G = nx.Graph()
 for i, tweet in enumerate(tweets):
     sentiment = "Positive" if preds[i] == 1 else "Negative"
     G.add_node(tweet, sentiment=sentiment)
-for i in range(len(tweets)-1):
-    G.add_edge(tweets[i], tweets[i+1])
+for i in range(len(tweets) - 1):
+    G.add_edge(tweets[i], tweets[i + 1])
 colors = ['green' if preds[i] == 1 else 'red' for i in range(len(preds))]
-nx.draw(G, with_labels=True, node_color=colors, font_size=8)
-plt.show()
+plt.figure(figsize=(10, 6))
+nx.draw(G, with_labels=True, node_color=colors, font_size=8, node_size=2000)
+plt.title("Twitter Sentiment Network Graph")
+plt.savefig("sentiment_graph.png")  # ✅ Saved to your workspace
+print("\n✅ Graph saved as 'sentiment_graph.png'. Check the Explorer panel to view it.")
