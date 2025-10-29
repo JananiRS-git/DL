@@ -5,14 +5,8 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
-tweets = [
-    "I love the new product!",
-    "The update is terrible!",
-    "Not bad, but could be better.",
-    "Absolutely fantastic experience!",
-    "Worst product ever."
-]
-labels = [1, 0, 1, 1, 0] 
+tweets = ["I love the new product!", "The update is terrible!", "Not bad, but could be better."]
+labels = [1, 0, 1] 
 tokenizer = Tokenizer()
 tokenizer.fit_on_texts(tweets)
 seqs = tokenizer.texts_to_sequences(tweets)
@@ -36,8 +30,5 @@ for i, tweet in enumerate(tweets):
 for i in range(len(tweets) - 1):
     G.add_edge(tweets[i], tweets[i + 1])
 colors = ['green' if preds[i] == 1 else 'red' for i in range(len(preds))]
-plt.figure(figsize=(10, 6))
-nx.draw(G, with_labels=True, node_color=colors, font_size=8, node_size=2000)
-plt.title("Twitter Sentiment Network Graph")
-plt.savefig("sentiment_graph.png")  # ✅ Saved to your workspace
-print("\n✅ Graph saved as 'sentiment_graph.png'. Check the Explorer panel to view it.")
+nx.draw(G, with_labels=True, node_color=colors, font_size=8)
+plt.show()
